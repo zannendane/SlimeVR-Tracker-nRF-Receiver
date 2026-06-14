@@ -1,0 +1,14 @@
+# Copyright (c) 2025 SlimeVR Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+identifier: zannendongle_uf2
+name: ZannenDongle_uf2
+vendor: zannen
+type: mcu
+arch: arm
+ram: 256
+flash: 1024
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools

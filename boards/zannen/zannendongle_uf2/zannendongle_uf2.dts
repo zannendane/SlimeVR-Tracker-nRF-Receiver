@@ -1,0 +1,126 @@
+// Copyright (c) 2025 SlimeVR Contributors
+// SPDX-License-Identifier: Apache-2.0
+
+/dts-v1/;
+#include <nordic/nrf52840_qiaa.dtsi>
+
+// PWM pin assignment for RGB status LED
+// Red:   P0.12, Green: P0.08, Blue:  P1.09
+&pinctrl {
+	pwm0_default: pwm0_default {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 12)>,
+				<NRF_PSEL(PWM_OUT1, 0, 8)>,
+				<NRF_PSEL(PWM_OUT2, 1, 9)>;
+			nordic,drive-mode = <NRF_DRIVE_D0S1>;
+			nordic,invert;
+		};
+	};
+
+	pwm0_sleep: pwm0_sleep {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 12)>,
+				<NRF_PSEL(PWM_OUT1, 0, 8)>,
+				<NRF_PSEL(PWM_OUT2, 1, 9)>;
+			low-power-enable;
+		};
+	};
+};
+
+/ {
+	model = "ZannenDongle_uf2";
+	compatible = "zannendongle_uf2";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,console = &cdc_acm_uart0;
+		zephyr,shell-uart = &cdc_acm_uart0;
+	};
+
+	// RFX2401C FEM: simple 2-control-pin front-end module
+	// Uses generic-fem-two-ctrl-pins driver (same as SKY66112).
+	// ctx = TX enable (P1.00), crx = RX enable (P0.24)
+	nrf_radio_fem: rfx2401c_fem {
+		compatible = "skyworks,sky66112-11", "generic-fem-two-ctrl-pins";
+		ctx-gpios = <&gpio1 0 GPIO_ACTIVE_HIGH>;       // RFX2401C TXEN (P1.00)
+		ctx-settle-time-us = <1>;
+		crx-gpios = <&gpio0 24 GPIO_ACTIVE_HIGH>;      // RFX2401C RXEN (P0.24)
+		crx-settle-time-us = <1>;
+		tx-gain-db = <22>;
+		rx-gain-db = <12>;
+	};
+
+	// PWM-driven RGB LED
+	pwmleds {
+		compatible = "pwm-leds";
+		pwm_led0: pwm_led_0 {
+			pwms = <&pwm0 0 PWM_MSEC(1) PWM_POLARITY_INVERTED>;
+		};
+		pwm_led1: pwm_led_1 {
+			pwms = <&pwm0 1 PWM_MSEC(1) PWM_POLARITY_INVERTED>;
+		};
+		pwm_led2: pwm_led_2 {
+			pwms = <&pwm0 2 PWM_MSEC(1) PWM_POLARITY_INVERTED>;
+		};
+	};
+
+	aliases {
+		pwm-led0 = &pwm_led0;
+		pwm-led1 = &pwm_led1;
+		pwm-led2 = &pwm_led2;
+	};
+
+	// Simple GPIO LED (fallback indicator on Red channel)
+	zephyr,user {
+		led-gpios = <&gpio0 12 (GPIO_ACTIVE_LOW | GPIO_OPEN_DRAIN)>;
+	};
+};
+
+// nRF52840 internal DCDC regulator configuration
+&reg1 {
+	regulator-initial-mode = <NRF5X_REG_MODE_DCDC>;
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+&gpiote {
+	status = "okay";
+};
+
+&pwm0 {
+	status = "okay";
+	pinctrl-0 = <&pwm0_default>;
+	pinctrl-1 = <&pwm0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+// USB peripheral with CDC ACM UART console
+zephyr_udc0: &usbd {
+	compatible = "nordic,nrf-usbd";
+	status = "okay";
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+// CryptoCell not needed for receiver firmware
+&cryptocell {
+	status = "disabled";
+};
+
+// NFC not used, disable to free GPIO pins
+&nfct {
+	status = "disabled";
+};
+
+// Link the FEM to the radio peripheral
+&radio {
+	fem = <&nrf_radio_fem>;
+};
