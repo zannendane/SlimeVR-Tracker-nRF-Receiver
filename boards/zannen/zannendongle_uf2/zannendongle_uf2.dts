@@ -39,16 +39,14 @@
 	};
 
 	// RFX2401C FEM: simple 2-control-pin front-end module
-	// Uses generic-fem-two-ctrl-pins driver (same as SKY66112).
-	// ctx = TX enable (P1.00), crx = RX enable (P0.24)
+	// Uses nRF21540 GPIO-only driver via MPSL for TX/RX switching.
+	// The nRF21540 driver is MPSL-native and correctly handles ESB
+	// radio events to toggle TXEN/RXEN automatically.
+	// TXEN = P1.00, RXEN = P0.24
 	nrf_radio_fem: rfx2401c_fem {
-		compatible = "skyworks,sky66112-11", "generic-fem-two-ctrl-pins";
-		ctx-gpios = <&gpio1 0 GPIO_ACTIVE_HIGH>;       // RFX2401C TXEN (P1.00)
-		ctx-settle-time-us = <1>;
-		crx-gpios = <&gpio0 24 GPIO_ACTIVE_HIGH>;      // RFX2401C RXEN (P0.24)
-		crx-settle-time-us = <1>;
-		tx-gain-db = <22>;
-		rx-gain-db = <12>;
+		compatible = "nordic,nrf21540-fem";
+		tx-en-gpios = <&gpio1 0 GPIO_ACTIVE_HIGH>;    // RFX2401C TXEN (P1.00)
+		rx-en-gpios = <&gpio0 24 GPIO_ACTIVE_HIGH>;   // RFX2401C RXEN (P0.24)
 	};
 
 	// PWM-driven RGB LED
@@ -77,9 +75,11 @@
 	};
 };
 
-// nRF52840 internal DCDC regulator configuration
+// nRF52840 internal main regulator (REG1) — use LDO mode by default.
+// DCDC mode requires external LC components; use LDO for guaranteed stability.
+// If the PCB includes the DCDC inductor/capacitor, change to NRF5X_REG_MODE_DCDC.
 &reg1 {
-	regulator-initial-mode = <NRF5X_REG_MODE_DCDC>;
+	regulator-initial-mode = <NRF5X_REG_MODE_LDO>;
 };
 
 &gpio0 {
