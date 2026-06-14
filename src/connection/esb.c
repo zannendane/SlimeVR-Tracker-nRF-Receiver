@@ -314,9 +314,11 @@ static void esb_deinitialize(void)
 		esb_initialized = false;
 		LOG_INF("Deinitializing ESB");
 		k_msleep(10); // wait for pending transmissions
-		// Always call esb_disable() — do NOT re-check esb_initialized.
-		// The re-check races with esb_pair()'s hot loop which
-		// calls esb_initialize() during the 10ms sleep window.
+		if (esb_initialized)
+		{
+			LOG_INF("ESB denitialize cancelled");
+			return;
+		}
 		esb_disable();
 	}
 	esb_initialized = false;
@@ -490,9 +492,7 @@ void esb_pair(void)
 
 void esb_reset_pair(void)
 {
-	esb_pairing = false;      // Signal current pairing loop to exit
-	k_msleep(20);             // Wait for loop exit + its internal esb_deinitialize()
-	esb_deinitialize();       // Now safe: no concurrent ESB operations
+	esb_deinitialize(); // make sure esb is off
 	esb_paired = false;
 }
 

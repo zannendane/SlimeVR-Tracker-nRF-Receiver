@@ -168,22 +168,21 @@ static inline void strtolower(char *str) {
 
 static void print_help(void)
 {
-	printk(
-		"\nhelp                         Display this help text\n"
-		"\ninfo                         Get device information\n"
-		"uptime                       Get device uptime\n"
-		"list                         Get paired devices\n"
-		"reboot                       Soft reset the device\n"
-		"\nadd <address>                Manually add a device\n"
-		"remove                       Remove last device\n"
-		"pair                         Enter pairing mode\n"
-		"exit                         Exit pairing mode\n"
-		"clear                        Clear stored devices\n"
+	printk("\nhelp                         Display this help text\n");
+
+	printk("\ninfo                         Get device information\n");
+	printk("uptime                       Get device uptime\n");
+	printk("list                         Get paired devices\n");
+	printk("reboot                       Soft reset the device\n");
+	printk("\nadd <address>                Manually add a device\n");
+	printk("remove                       Remove last device\n");
+	printk("pair                         Enter pairing mode\n");
+	printk("exit                         Exit pairing mode\n");
+	printk("clear                        Clear stored devices\n");
 #if DFU_EXISTS
-		"\ndfu                          Enter DFU bootloader\n"
+	printk("\ndfu                          Enter DFU bootloader\n");
 #endif
-		"\nmeow                         Meow!\n"
-	);
+	printk("\nmeow                         Meow!\n");
 }
 
 static void console_thread(void)
