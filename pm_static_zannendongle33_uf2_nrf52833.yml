@@ -1,0 +1,14 @@
+# Partition Manager static configuration for ZannenDongle33_uf2 (nRF52833)
+# Uses Adafruit UF2 bootloader with S140 SoftDevice:
+# 0x0-0x27000 reserved for MBR (0x0-0x1000) + S140 v7.3.0 (0x27000 total),
+# application starts at 0x27000, UF2 bootloader at the end of flash.
+bootloader:
+  address: 0x0
+  end_address: 0x27000
+  region: flash_primary
+  size: 0x27000
+uf2_bootloader:
+  address: 0x74000
+  end_address: 0x80000
+  region: flash_primary
+  size: 0xc000

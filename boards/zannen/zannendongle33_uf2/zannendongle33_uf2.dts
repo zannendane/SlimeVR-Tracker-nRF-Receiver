@@ -1,0 +1,89 @@
+// Copyright (c) 2025 SlimeVR Contributors
+// SPDX-License-Identifier: Apache-2.0
+
+/dts-v1/;
+#include <nordic/nrf52833_qdaa.dtsi>
+
+/ {
+	model = "ZannenDongle33_uf2";
+	compatible = "zannendongle33_uf2";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,console = &cdc_acm_uart0;
+		zephyr,shell-uart = &cdc_acm_uart0;
+	};
+
+	// RFX2401C FEM: simple 2-control-pin front-end module
+	// Uses nRF21540 GPIO-only driver via MPSL for TX/RX switching.
+	// The nRF21540 driver is MPSL-native and correctly handles ESB
+	// radio events to toggle TXEN/RXEN automatically.
+	// 10k pull-downs (R3/R4) hold both enables low during boot.
+	// TXEN = P0.11, RXEN = P1.09
+	nrf_radio_fem: rfx2401c_fem {
+		compatible = "nordic,nrf21540-fem";
+		tx-en-gpios = <&gpio0 11 GPIO_ACTIVE_HIGH>;   // RFX2401C TXEN (P0.11)
+		rx-en-gpios = <&gpio1 9 GPIO_ACTIVE_HIGH>;    // RFX2401C RXEN (P1.09)
+	};
+
+	// SW0 button to GND, double short-press enters pairing mode
+	buttons {
+		compatible = "gpio-keys";
+		button0: button_0 {
+			gpios = <&gpio0 20 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Push button switch 0";
+		};
+	};
+
+	aliases {
+		sw0 = &button0;
+	};
+
+	// Single white LED, anode driven by P0.15 (active high)
+	zephyr,user {
+		led-gpios = <&gpio0 15 GPIO_ACTIVE_HIGH>;
+	};
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+&gpiote {
+	status = "okay";
+};
+
+// USB peripheral with CDC ACM UART console
+zephyr_udc0: &usbd {
+	compatible = "nordic,nrf-usbd";
+	status = "okay";
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+// NFC not used, disable to free GPIO pins
+&nfct {
+	status = "disabled";
+};
+
+// Normal voltage mode: VDDH is shorted to VDD (3.3 V) on this board, so
+// REG0 is automatically disabled and never supplies external components.
+&reg0 {
+	status = "disabled";
+};
+
+// No LC network on DCC (NC): REG1 runs in LDO mode, DCDC stays disabled.
+&reg1 {
+	regulator-initial-mode = <NRF5X_REG_MODE_LDO>;
+};
+
+// Link the FEM to the radio peripheral
+&radio {
+	fem = <&nrf_radio_fem>;
+};

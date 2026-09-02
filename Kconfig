@@ -52,4 +52,12 @@ config LED_DEFAULT_COLOR_B
 
 endmenu
 
+config ESB_TX_OUTPUT_POWER
+	int "Requested ESB on-air TX power in dBm"
+	default 30
+	help
+	    Requested on-air TX power for ESB in dBm. When a front-end module is
+	    present, MPSL splits this into SoC radio power and FEM gain; values
+	    above the achievable maximum are clamped by MPSL.
+
 source "Kconfig.zephyr"

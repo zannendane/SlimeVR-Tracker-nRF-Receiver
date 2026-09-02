@@ -1,0 +1,28 @@
+# Copyright (c) 2025 SlimeVR Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+CONFIG_ARM_MPU=y
+CONFIG_HW_STACK_PROTECTION=y
+
+CONFIG_USB_DEVICE_MANUFACTURER="Zannen"
+CONFIG_USB_DEVICE_PRODUCT="SlimeNRF Receiver ZannenDongle33"
+
+# Single white LED, no RGB color mapping (LED_RGB_COLOR not set)
+
+# RFX2401C FEM gain model used by MPSL for the TX power split.
+# 20 dB is the maximum value accepted by the driver (POUTA).
+CONFIG_MPSL_FEM_NRF21540_TX_GAIN_DB=20
+# RFX2401C typical LNA gain is ~12 dB
+CONFIG_MPSL_FEM_NRF21540_RX_GAIN_DB=12
+
+# Original Skyworks RFX2401C: request 28 dBm so the SoC radio runs at its
+# +8 dBm maximum (28 - 20 dB FEM gain); the PA saturates at ~+22 dBm on-air.
+CONFIG_ESB_TX_OUTPUT_POWER=28
+
+# Generate UF2 file for Adafruit UF2 bootloader flashing
+# No default UF2 family ID exists for SOC_NRF52833_QDAA, set the
+# nRF52833 family ID explicitly.
+CONFIG_BUILD_OUTPUT_UF2=y
+CONFIG_BUILD_OUTPUT_UF2_FAMILY_ID="0x621e937a"
+# Application starts after MBR + S140 SoftDevice (0x0-0x27000)
+CONFIG_FLASH_LOAD_OFFSET=0x27000
